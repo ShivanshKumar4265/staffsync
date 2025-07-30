@@ -4,6 +4,7 @@ import com.jmd.staffsync_both.dto.RoleResponseDto;
 import com.jmd.staffsync_both.entity.Roles;
 import com.jmd.staffsync_both.repository.RolesRepository;
 import com.jmd.staffsync_both.service.RoleService;
+import com.jmd.staffsync_both.utils.StringConstant;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,7 +25,7 @@ public class RoleServiceImpl implements RoleService {
         try {
 
             if (role == null || role.getRoleName() == null || role.getRoleName().isEmpty()) {
-                return new RoleResponseDto("invalid request", "Role name cannot be null or empty", null);
+                return new RoleResponseDto(StringConstant.INVALID_REQUEST, "Role name cannot be null or empty", null);
             }
 
             String roleName = role.getRoleName();
@@ -36,9 +37,8 @@ public class RoleServiceImpl implements RoleService {
 
 
             if (rolesRepository.existsByRoleName(roleName)) {
-                return new RoleResponseDto("conflict", "Role already exists", null);
+                return new RoleResponseDto(StringConstant.CONFLICT, "Role already exists", null);
             }
-
 
 
             Roles newRole = new Roles();
@@ -49,9 +49,9 @@ public class RoleServiceImpl implements RoleService {
             Roles savedRole = rolesRepository.save(newRole);
 
 
-            return new RoleResponseDto("success", "Role created successfully", savedRole);
+            return new RoleResponseDto(StringConstant.SUCCESS, "Role created successfully", savedRole);
         } catch (Exception e) {
-            return new RoleResponseDto("error", "Failed to create role: " + e.getMessage(), null);
+            return new RoleResponseDto(StringConstant.ERROR, "Failed to create role: " + e.getMessage(), null);
         }
-   }
+    }
 }

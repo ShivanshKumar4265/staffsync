@@ -5,6 +5,7 @@ import com.jmd.staffsync_both.dto.ConnectionDto;
 import com.jmd.staffsync_both.entity.Connection;
 import com.jmd.staffsync_both.repository.GetConnectionRepository;
 import com.jmd.staffsync_both.service.ConnectionService;
+import com.jmd.staffsync_both.utils.StringConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,7 @@ public class ConnectionServiceImpl implements ConnectionService {
 
     private String generateRandomString(int length) {
         StringBuilder sb = new StringBuilder(length);
-        for(int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++) {
             sb.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
         }
         return sb.toString();
@@ -37,9 +38,9 @@ public class ConnectionServiceImpl implements ConnectionService {
 
     @Override
     public ConnectionDto createConnection(String api_key) {
-        try{
+        try {
             if (!apiProperties.getKey().equals(api_key)) {
-                return new ConnectionDto("error", "Invalid API key", "");
+                return new ConnectionDto(StringConstant.ERROR, "Invalid API key", "");
             }
             String generatedConnectionId = generateRandomString(25);
             Connection connection = new Connection();
@@ -47,9 +48,9 @@ public class ConnectionServiceImpl implements ConnectionService {
             connection.setCreated_at(LocalDateTime.now());
             connection.setUpdated_at(LocalDateTime.now());
             Connection saved = connectionRepository.save(connection);
-            return new ConnectionDto("success", "create successfully", saved.getConnection_id()==null?"": saved.getConnection_id());
-        }catch (Exception e){
-            return new ConnectionDto("error", e.getMessage(), "");
+            return new ConnectionDto(StringConstant.SUCCESS, "create successfully", saved.getConnection_id() == null ? "" : saved.getConnection_id());
+        } catch (Exception e) {
+            return new ConnectionDto(StringConstant.ERROR, e.getMessage(), "");
         }
     }
 }
