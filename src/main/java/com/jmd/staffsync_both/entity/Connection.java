@@ -16,31 +16,25 @@ public class Connection {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+
     @Column(name = "connection_id")
-    private String connection_id;
+    private String connectionId;
+
+
     @Column(name = "auth_code")
-    private String auth_code;
+    private String authCode;
+
+
     @Column(name = "created_at")
     private LocalDateTime created_at;
+
+
     @Column(name = "updated_at")
-    private LocalDateTime updated_at;
-    @Column(name = "user_id")
-    private int user_id;
+    private LocalDateTime updatedAt;
 
+    @OneToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    private Business user;
 
-    /**
-     * import jakarta.persistence.PrePersist;
-     * import jakarta.persistence.PreUpdate;
-     *
-     * @PrePersist
-     * protected void onCreate() {
-     *     createdAt = LocalDateTime.now();
-     *     updatedAt = LocalDateTime.now();
-     * }
-     *
-     * @PreUpdate
-     * protected void onUpdate() {
-     *     updatedAt = LocalDateTime.now();
-     * }
-     */
 }

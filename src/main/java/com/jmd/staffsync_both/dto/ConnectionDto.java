@@ -9,7 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ConnectionDto {
-    private String status;
-    private String message;
     private String connectionId;
 }

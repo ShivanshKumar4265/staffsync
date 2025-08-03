@@ -13,4 +13,7 @@ public class UserDetailsDto {
     private String mobileNumber;
     private String emailId;
     private String profilePic;
+    private String auth_code;
+    private String company_name;
+    private String whatsapp_no;
 }

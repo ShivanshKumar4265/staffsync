@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Users {
+public class Business {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -25,7 +25,6 @@ public class Users {
 
     @Column(name = "company_name")
     @JsonProperty("company_name")
-
     private String companyName;
 
     @Column(name = "mobile_number", unique = true)
@@ -49,6 +48,10 @@ public class Users {
     @Column(name = "is_active")
     @JsonProperty("is_active")
     private boolean isActive;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Connection connection;
+
 
     @Column(name = "created_at")
     @JsonProperty("created_at")

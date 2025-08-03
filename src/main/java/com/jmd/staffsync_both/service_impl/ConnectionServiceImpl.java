@@ -5,6 +5,8 @@ import com.jmd.staffsync_both.dto.ConnectionDto;
 import com.jmd.staffsync_both.entity.Connection;
 import com.jmd.staffsync_both.repository.GetConnectionRepository;
 import com.jmd.staffsync_both.service.ConnectionService;
+import com.jmd.staffsync_both.utils.GenricDTO;
+import com.jmd.staffsync_both.utils.RandomString;
 import com.jmd.staffsync_both.utils.StringConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,42 +17,45 @@ import java.time.LocalDateTime;
 @Service
 public class ConnectionServiceImpl implements ConnectionService {
 
-    @Autowired
-    private GetConnectionRepository connectionRepository;
+    private final GetConnectionRepository connectionRepository;
 
     private final ApiProperties apiProperties;
 
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    private static final SecureRandom random = new SecureRandom();
 
-    public ConnectionServiceImpl(ApiProperties apiProperties) {
+    public ConnectionServiceImpl(ApiProperties apiProperties, GetConnectionRepository connectionRepository, RandomString randomString) {
         this.apiProperties = apiProperties;
-    }
-
-    private String generateRandomString(int length) {
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
-        }
-        return sb.toString();
+        this.connectionRepository = connectionRepository;
     }
 
 
     @Override
-    public ConnectionDto createConnection(String api_key) {
+    public GenricDTO<ConnectionDto> createConnection(String api_key) {
         try {
-            if (!apiProperties.getKey().equals(api_key)) {
-                return new ConnectionDto(StringConstant.ERROR, "Invalid API key", "");
+            if (api_key == null || api_key.isBlank()) {
+                return new GenricDTO<>(StringConstant.ERROR, "API key is missing", null);
             }
-            String generatedConnectionId = generateRandomString(25);
+
+            if (!apiProperties.getKey().equals(api_key)) {
+                return new GenricDTO<>(StringConstant.INVALID_REQUEST, "Invalid API key", null);
+            }
+
+            String generatedConnectionId = RandomString.generateRandomString(25);
             Connection connection = new Connection();
-            connection.setConnection_id(generatedConnectionId);
+            connection.setConnectionId(generatedConnectionId);
             connection.setCreated_at(LocalDateTime.now());
-            connection.setUpdated_at(LocalDateTime.now());
+            connection.setUpdatedAt(LocalDateTime.now());
+
             Connection saved = connectionRepository.save(connection);
-            return new ConnectionDto(StringConstant.SUCCESS, "create successfully", saved.getConnection_id() == null ? "" : saved.getConnection_id());
+            ConnectionDto dto = new ConnectionDto(saved.getConnectionId());
+
+            return new GenricDTO<>(StringConstant.SUCCESS, "Connection created successfully", dto);
+
         } catch (Exception e) {
-            return new ConnectionDto(StringConstant.ERROR, e.getMessage(), "");
+            // Use logger in production
+            e.printStackTrace();
+            return new GenricDTO<>(StringConstant.ERROR, "Internal server error: " + e.getMessage(), null);
         }
     }
+
+
 }
