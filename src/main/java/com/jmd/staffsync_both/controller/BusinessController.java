@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/employer")
-public class UsersController {
+public class BusinessController {
     private UserService userService;
 
-    public UsersController(UserService userService) {
+    public BusinessController(UserService userService) {
         this.userService = userService;
     }
 
