@@ -15,16 +15,20 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Roles {
     @Id
-    @Column(name = "id")
+    @Column(name = "role_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
     @Column(name = "role_name")
     @JsonProperty("role_name")
     private String roleName;
+
     @Column(name = "isActive")
     private boolean isActive;
+
     @Column(name = "created_at")
     private LocalDateTime created_at;
+
     @Column(name = "updated_at")
     private LocalDateTime updated_at;
 }

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "business")
+@Table(name = "business_owner")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -52,6 +52,9 @@ public class Business {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Connection connection;
 
+    @ManyToOne
+    @JoinColumn(name = "role_id", referencedColumnName = "role_id")
+    private Roles role;;
 
     @Column(name = "created_at")
     @JsonProperty("created_at")
