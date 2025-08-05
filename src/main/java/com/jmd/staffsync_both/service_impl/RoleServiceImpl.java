@@ -1,5 +1,7 @@
 package com.jmd.staffsync_both.service_impl;
 
+import com.jmd.staffsync_both.dto.RoleListDTO;
+import com.jmd.staffsync_both.dto.request_dto.ReqCommonDTO;
 import com.jmd.staffsync_both.dto.request_dto.ReqCreateRoleDTO;
 import com.jmd.staffsync_both.entity.Business;
 import com.jmd.staffsync_both.entity.Connection;
@@ -15,8 +17,11 @@ import com.jmd.staffsync_both.utils.GenricDTO;
 import com.jmd.staffsync_both.utils.StringConstant;
 import org.springframework.stereotype.Service;
 
+import javax.management.relation.Role;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,6 +95,39 @@ public class RoleServiceImpl implements RoleService {
             return new GenricDTO<>(StringConstant.SUCCESS, "Role created successfully", savedRole);
         } catch (Exception e) {
             return new GenricDTO<>(StringConstant.ERROR, "Failed to create role: " + e.getMessage(), null);
+        }
+    }
+
+    @Override
+    public GenricDTO<List<RoleListDTO>> getRoles(ReqCommonDTO reqCommonDTO) {
+        try {
+
+            Business business = connectionAuthValidator.validateConnectionAuth(
+                    reqCommonDTO.getConnectionId(),
+                    reqCommonDTO.getAuthCode()  // assuming this getter exists
+            );
+
+            if (business == null) {
+                return new GenricDTO<>(StringConstant.UNAUTHORIZED, "Unauthorized access", null);
+            }
+
+            List<RoleMappingTable> mappings = roleMappingRepository.findByUserUserId(business.getUserId());
+
+            List<RoleListDTO> roles = new ArrayList<>();
+            for (RoleMappingTable mapping : mappings) {
+                Roles role = mapping.getRole();
+                RoleListDTO dto = new RoleListDTO(role.getRoleName(), role.getId());
+                roles.add(dto);
+            }
+
+
+            if (roles.isEmpty()) {
+                return new GenricDTO<>(StringConstant.SUCCESS, "No Role Found!!", roles);
+            } else {
+                return new GenricDTO<>(StringConstant.SUCCESS, "Role List fetched", roles);
+            }
+        } catch (Exception e) {
+            return new GenricDTO<>(StringConstant.ERROR, "Something went wrong, please try again" + e.getMessage(), null);
         }
     }
 }
