@@ -54,7 +54,7 @@ public class Business {
 
     @ManyToOne
     @JoinColumn(name = "role_id", referencedColumnName = "role_id")
-    private Roles role;;
+    private Roles role;
 
     @Column(name = "created_at")
     @JsonProperty("created_at")

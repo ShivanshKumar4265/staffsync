@@ -4,26 +4,31 @@ import com.jmd.staffsync_both.dto.UserDetailsDto;
 import com.jmd.staffsync_both.dto.request_dto.ReqRegisterUserDTO;
 import com.jmd.staffsync_both.entity.Connection;
 import com.jmd.staffsync_both.entity.Business;
+import com.jmd.staffsync_both.entity.Roles;
 import com.jmd.staffsync_both.repository.GetConnectionRepository;
-import com.jmd.staffsync_both.repository.UsersRepository;
+import com.jmd.staffsync_both.repository.BusinessRepository;
+import com.jmd.staffsync_both.repository.RolesRepository;
 import com.jmd.staffsync_both.service.UserService;
 import com.jmd.staffsync_both.utils.GenricDTO;
 import com.jmd.staffsync_both.utils.RandomString;
 import com.jmd.staffsync_both.utils.StringConstant;
 import org.springframework.stereotype.Service;
 
+import javax.management.relation.Role;
 import java.time.LocalDateTime;
 
 
 @Service
 public class UsersServiceImpl implements UserService {
 
-    UsersRepository usersRepository;
+    BusinessRepository usersRepository;
     GetConnectionRepository getConnectionRepository;
+    RolesRepository rolesRepository;
 
-    public UsersServiceImpl(UsersRepository usersRepository, GetConnectionRepository getConnectionRepository) {
+    public UsersServiceImpl(BusinessRepository usersRepository, GetConnectionRepository getConnectionRepository, RolesRepository rolesRepository) {
         this.usersRepository = usersRepository;
         this.getConnectionRepository = getConnectionRepository;
+        this.rolesRepository = rolesRepository;
     }
 
     @Override
@@ -78,15 +83,15 @@ public class UsersServiceImpl implements UserService {
                 return new GenricDTO<>(StringConstant.INVALID_REQUEST, "Invalid email format", null);
             }
 
-            if (!user.getMobileNumber().matches("^[6-9]\\d{9}$")) {
+            if (!user.getMobileNumber().matches("^\\d{10}$")) {
                 return new GenricDTO<>(StringConstant.INVALID_REQUEST, "Invalid mobile number format", null);
             }
 
-            if (!user.getWhatsappNo().matches("^[6-9]\\d{9}$")) {
+            if (!user.getWhatsappNo().matches("^\\d{10}$")) {
                 return new GenricDTO<>(StringConstant.INVALID_REQUEST, "Invalid whatsapp number format", null);
             }
 
-            if (!user.getWhatsappNo().matches("^[6-9]\\d{9}$")) {
+            if (!user.getWhatsappNo().matches("^\\d{10}$")) {
                 return new GenricDTO<>(StringConstant.INVALID_REQUEST, "Invalid mobile number format", null);
             }
 
@@ -99,6 +104,18 @@ public class UsersServiceImpl implements UserService {
             newUsers.setWhatsappNo(user.getWhatsappNo());
             newUsers.setProfilePic(user.getProfilePic());
             newUsers.setCreated_at(LocalDateTime.now());
+
+            Roles roles = rolesRepository.findByRoleName(StringConstant.SUPER_ADMIN);
+            if (roles != null) {
+                newUsers.setRole(roles);
+            } else {
+                Roles superAdminRole = new Roles();
+                superAdminRole.setRoleName(StringConstant.SUPER_ADMIN);
+                superAdminRole.setActive(true);
+                superAdminRole.setCreated_at(LocalDateTime.now());
+                superAdminRole = rolesRepository.save(superAdminRole);
+                newUsers.setRole(superAdminRole);
+            }
 
             Business savedUser = usersRepository.save(newUsers);
 
