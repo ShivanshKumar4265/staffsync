@@ -3,6 +3,7 @@ package com.jmd.staffsync_both.controller;
 import com.jmd.staffsync_both.dto.RoleListDTO;
 import com.jmd.staffsync_both.dto.request_dto.ReqCommonDTO;
 import com.jmd.staffsync_both.dto.request_dto.ReqCreateRoleDTO;
+import com.jmd.staffsync_both.dto.request_dto.ReqUpdateRole;
 import com.jmd.staffsync_both.entity.Roles;
 import com.jmd.staffsync_both.service.RoleService;
 import com.jmd.staffsync_both.utils.GenricDTO;
@@ -56,5 +57,25 @@ public class RolesController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    @PutMapping("/update_role")
+    public ResponseEntity<GenricDTO<Roles>> updateRole(@RequestBody ReqUpdateRole reqUpdateRole) {
+        GenricDTO<Roles> response = roleService.updateRole(reqUpdateRole);
+
+        if (StringConstant.SUCCESS.equalsIgnoreCase(response.getStatus())) {
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } else if (StringConstant.INVALID_REQUEST.equalsIgnoreCase(response.getStatus())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } else if (StringConstant.CONFLICT.equalsIgnoreCase(response.getStatus())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        } else if (StringConstant.UNAUTHORIZED.equalsIgnoreCase(response.getStatus())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        } else if (StringConstant.NOT_FOUND.equalsIgnoreCase(response.getStatus())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 
 }
