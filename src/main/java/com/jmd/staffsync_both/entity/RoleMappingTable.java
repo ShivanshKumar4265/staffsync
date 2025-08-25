@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +23,7 @@ public class RoleMappingTable {
     private long id;
 
     @ManyToOne
+    @OnDelete(action = OnDeleteAction.CASCADE) // Hibernate-specific
     @JoinColumn(name = "role_id", referencedColumnName = "role_id")
     private Roles role;
 

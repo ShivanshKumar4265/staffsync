@@ -5,7 +5,6 @@ import com.jmd.staffsync_both.dto.request_dto.ReqCommonDTO;
 import com.jmd.staffsync_both.dto.request_dto.ReqCreateRoleDTO;
 import com.jmd.staffsync_both.dto.request_dto.ReqUpdateRole;
 import com.jmd.staffsync_both.entity.Business;
-import com.jmd.staffsync_both.entity.Connection;
 import com.jmd.staffsync_both.entity.RoleMappingTable;
 import com.jmd.staffsync_both.entity.Roles;
 import com.jmd.staffsync_both.repository.BusinessRepository;
@@ -16,6 +15,7 @@ import com.jmd.staffsync_both.service.RoleService;
 import com.jmd.staffsync_both.utils.ConnectionAuthValidator;
 import com.jmd.staffsync_both.utils.GenricDTO;
 import com.jmd.staffsync_both.utils.StringConstant;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import javax.management.relation.Role;
@@ -147,9 +147,10 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional
     public GenricDTO<Roles> updateRole(ReqUpdateRole reqUpdateRole) {
         try {
-            // Validate connection/auth
+            // Step 1: Validate connection/auth
             Business business = connectionAuthValidator.validateConnectionAuth(
                     reqUpdateRole.getConnectionId(),
                     reqUpdateRole.getAuthCode()
@@ -159,35 +160,47 @@ public class RoleServiceImpl implements RoleService {
                 return new GenricDTO<>(StringConstant.UNAUTHORIZED, "Unauthorized access", null);
             }
 
+            // Step 2: Validate role ID
             if (reqUpdateRole.getRoleId() == null || reqUpdateRole.getRoleId().isEmpty()) {
                 return new GenricDTO<>(StringConstant.INVALID_REQUEST, "Role ID cannot be null or empty", null);
             }
 
-
-            // Fetch existing role mapping
-            RoleMappingTable existingMapping = roleMappingRepository.findById(Long.parseLong(reqUpdateRole.getRoleId()))
+            RoleMappingTable existingMapping = roleMappingRepository
+                    .findById(Long.parseLong(reqUpdateRole.getRoleId()))
                     .orElse(null);
 
             if (existingMapping == null) {
-                return new GenricDTO<>(StringConstant.NOT_FOUND, "You doesn't have this role", null);
+                return new GenricDTO<>(StringConstant.NOT_FOUND, "Role not found", null);
             }
 
+            // Step 3: Format new role name
             String newRoleName = reqUpdateRole.getRoleName() != null
                     ? Arrays.stream(reqUpdateRole.getRoleName().trim().toLowerCase().split("\\s+"))
                     .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1))
                     .collect(Collectors.joining(" "))
                     : null;
 
-            // Case 1: Role rename
-            if (newRoleName != null && !newRoleName.isEmpty() && !newRoleName.equals(existingMapping.getRole().getRoleName())) {
-                // Create new role
-                Roles newRole = new Roles();
-                newRole.setRoleName(newRoleName);
-                newRole.setCreated_at(LocalDateTime.now());
-                newRole.setActive(true);
-                newRole = rolesRepository.save(newRole);
+            // Step 4: Rename role (if applicable)
+            if (newRoleName != null &&
+                    !newRoleName.isEmpty() &&
+                    !newRoleName.equals(existingMapping.getRole().getRoleName())) {
 
-                // Create new mapping for the business
+                // Fetch or create role
+                Roles newRole = rolesRepository.findByRoleName(newRoleName);
+                if (newRole == null) {
+                    newRole = new Roles();
+                    newRole.setRoleName(newRoleName);
+                    newRole.setCreated_at(LocalDateTime.now());
+                    newRole.setActive(true);
+                    newRole = rolesRepository.save(newRole);
+                }
+
+                // Deactivate existing mapping
+                existingMapping.setActive(false);
+                existingMapping.setUpdatedAt(LocalDateTime.now());
+                roleMappingRepository.save(existingMapping);
+
+                // Create new mapping
                 RoleMappingTable newMapping = new RoleMappingTable();
                 newMapping.setRole(newRole);
                 newMapping.setUser(business);
@@ -195,24 +208,21 @@ public class RoleServiceImpl implements RoleService {
                 newMapping.setCreateAt(LocalDateTime.now());
                 roleMappingRepository.save(newMapping);
 
-                // Deactivate old mapping
-                existingMapping.setActive(false);
-                existingMapping.setUpdatedAt(LocalDateTime.now());
-                roleMappingRepository.save(existingMapping);
-
-                return new GenricDTO<>(StringConstant.SUCCESS, "Role renamed successfully", newRole);
+                return new GenricDTO<>(StringConstant.SUCCESS, "Role renamed successfully", null);
             }
 
-            // Case 2: Only update active status
+            // Step 5: If no rename, update active status only
             existingMapping.setActive(reqUpdateRole.isActive());
             existingMapping.setUpdatedAt(LocalDateTime.now());
             roleMappingRepository.save(existingMapping);
 
-            return new GenricDTO<>(StringConstant.SUCCESS, "Role status updated successfully", existingMapping.getRole());
+            return new GenricDTO<>(StringConstant.SUCCESS, "Role status updated successfully", null);
 
         } catch (Exception e) {
+            e.printStackTrace();
             return new GenricDTO<>(StringConstant.ERROR, "Failed to update role: " + e.getMessage(), null);
         }
     }
+
 
 }
